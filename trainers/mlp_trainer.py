@@ -1,4 +1,4 @@
-from torch import nn
+import torch.multiprocessing as mp
 import torch
 import numpy as np
 import os
@@ -29,7 +29,7 @@ class Trainer(object):
         Gets criterion.
         :return: criterion
         """
-        criterion = torch.nn.NLLLoss()  # nn.CrossEntropyLoss()
+        criterion = torch.nn.NLLLoss()  # nn.CrossEntropyLoss()  #
         return criterion
 
     def get_optimizer(self):
@@ -37,10 +37,10 @@ class Trainer(object):
         Gets optimizer.
         :return: optimizer
         """
-        # torch.optim.SGD(self.model.parameters(),
-                                    # lr=self.cfg.lr, momentum=0.99, weight_decay=self.cfg.weight_decay, nesterov=True)  #
-        optimizer = torch.optim.Adam([{'params': self.model.parameters(), 'lr': self.cfg.lr,
-                                       'weight_decay': self.cfg.weight_decay}])
+        optimizer = torch.optim.SGD(self.model.parameters(), lr=self.cfg.lr, momentum=0.99, nesterov=True,
+                                    weight_decay=self.cfg.weight_decay)
+        # optimizer = torch.optim.Adam([{'params': self.model.parameters(), 'lr': self.cfg.lr,
+        #                                'weight_decay': self.cfg.weight_decay}])
         return optimizer
 
     def restore_model(self):
@@ -97,7 +97,6 @@ class Trainer(object):
             correct_predictions, total_predictions = 0, 0
             dl_len = len(dl)
             for i, batch in enumerate(dl):
-                # batch[0] = torch.stack(batch[0], -1)
                 input_vector, labels, lens_ = batch[0], batch[1], batch[2]  # .cuda()
 
                 if i % 500 == 0:
@@ -131,9 +130,7 @@ class Trainer(object):
         :param batch: current batch containing input vector and it`s label
         :return: loss on current batch
         """
-        # batch[0] = torch.stack(batch[0], -1)
         input_vector, label, lens_ = batch[0], batch[1], batch[2]  # .cuda()
-        # input_vector = torch.stack(input_vector, -1)
         self.optimizer.zero_grad()
         out = self.model(input_vector, lens_)
         loss = self.criterion(out, label)
@@ -142,22 +139,7 @@ class Trainer(object):
         self.optimizer.step()
         return loss.item()
 
-    def train(self):
-        """
-        Runs training procedure.
-        """
-        total_training_start_time = time.time()
-        self.start_epoch, self.epoch, self.global_step = 0, -1, 0
-
-        # restore model if necessary
-        self.restore_model()
-
-        # evaluate on train and test data before training
-        if self.cfg.evaluate_before_training:
-            if self.cfg.evaluate_on_train_set:
-                self.evaluate(self.dl_train, set_type='train')
-            self.evaluate(self.dl_test, set_type='test')
-
+    def training_loop(self):
         # start training
         print(f'Starting training...')
         iter_num = len(self.dl_train)
@@ -172,7 +154,8 @@ class Trainer(object):
                 loss = self.make_training_step(batch)
                 self.logger.log_metrics(names=['train/loss'], metrics=[loss], step=self.global_step)
 
-                losses.append(loss)
+                if loss is not None:
+                    losses.append(loss)
                 self.global_step += 1
 
                 if iter_ % 50 == 0:
@@ -190,5 +173,35 @@ class Trainer(object):
             self.evaluate(self.dl_test, set_type='test')
 
             print(f'Epoch total time: {round((time.time() - epoch_start_time) / 60, 3)} min')
+
+    def train(self):
+        """
+        Runs training procedure.
+        """
+        total_training_start_time = time.time()
+        self.start_epoch, self.epoch, self.global_step = 0, -1, 0
+
+        # restore model if necessary
+        self.restore_model()
+
+        # evaluate on train and test data before training
+        if self.cfg.evaluate_before_training:
+            if self.cfg.evaluate_on_train_set:
+                self.evaluate(self.dl_train, set_type='train')
+            self.evaluate(self.dl_test, set_type='test')
+
+        if self.cfg.use_multiprocessing:
+            self.num_processes = self.cfg.num_processes
+            self.model.share_memory()
+
+            processes = []
+            for rank in range(self.num_processes):
+                p = mp.Process(target=self.training_loop)
+                p.start()
+                processes.append(p)
+            for p in processes:
+                p.join()
+        else:
+            self.training_loop()
 
         print(f'Training time: {round((time.time() - total_training_start_time) / 60, 3)} min')
