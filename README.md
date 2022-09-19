@@ -2,7 +2,7 @@
 
 ## About The Project
 1) Implementation of FastText from 
-paper: 
+paper `Enriching Word Vectors with Subword Information`: 
 
     https://arxiv.org/pdf/1607.04606.pdf
     
