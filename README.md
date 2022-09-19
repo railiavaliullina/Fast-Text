@@ -1,7 +1,7 @@
 # Fast-Text
 
 ## About The Project
-1) Implementation of FastText, 
+1) Implementation of FastText from 
 paper: 
 
     https://arxiv.org/pdf/1607.04606.pdf
