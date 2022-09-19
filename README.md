@@ -1,24 +1,40 @@
 # Fast-Text
 
+## About The Project
+1) Implementation of FastText, 
+paper: 
 
-Файл для запуска: executor/executor.py
+    https://arxiv.org/pdf/1607.04606.pdf
+    
+2) Training on AG News Classification Dataset for document classification task.
 
-Запустится валидация на train, test данных с лучшим чекпоинтом и затем продолжится обучение.
 
-Код для запуска на кэггл: FastText (final) Также запустится валидация на train, test данных с лучшим чекпоинтом и затем продолжится обучение.
+File to run:
 
-Графики: saved_files/plots/
+    executor/executor.py
 
-Конф. матрицы: saved_files/plots/Conf matrices/
+- After running executor.py, there is validation step on train and test data with the best checkpoint, and then training continues.
 
-Mlflow логи: executor/mlruns.zip
+To run on Kaggle: 
 
-Лучшая точность, Testing error:
+    FastText (final)
 
-для Fasttext bigram - accuracy: 87.65789473684211 %, test error: 12.34210526315789
+## Additional Information
 
-для Fasttext no-bigram - accuracy: 87.02631578947368 %, test error: 12.973684210526315
+Visualization of accuracy on the training and test samples, loss are in: 
 
-Предобработанные пиклы: preprocessed_data_fast_text (для битбакета слишком тяжелые, пушится долго. Если запускать на компьютере, нужно скачать и скопировать эти файлы в проект в папку \data\preprocessed_data Но можно просто запустить на кэгле, там все настроено.)
+    saved_files/plots/
 
-В графиках сравнения Fast Text с BoW есть 2 графика для Bow - c адамом и sgd, потому что изначально он обучался с адамом, но для более честного сравнения переобучила с sgd.
+Confusion matrices are in: 
+
+    saved_files/plots/Conf matrices/
+
+MlFlow logs are in: 
+
+    executor/mlruns.zip
+
+Best achieved result:
+
+    Fasttext bigram - accuracy: 87.65789473684211 %, test error: 12.34210526315789
+
+    Fasttext no-bigram - accuracy: 87.02631578947368 %, test error: 12.973684210526315
