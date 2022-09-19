@@ -17,7 +17,7 @@ File to run:
 
 To run on Kaggle: 
 
-    FastText (final)
+    [FastText (final)](https://www.kaggle.com/code/rvnrvn1/fasttext-final)
 
 ## Additional Information
 
